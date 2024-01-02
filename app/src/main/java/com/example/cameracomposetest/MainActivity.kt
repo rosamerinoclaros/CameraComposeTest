@@ -94,7 +94,7 @@ fun Camera(
             )
             it.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
         }
-        val preview = Preview.Builder().build()
+        val preview = remember { Preview.Builder().build() }
 
         val imageCapture = ImageCapture.Builder().build()
 
