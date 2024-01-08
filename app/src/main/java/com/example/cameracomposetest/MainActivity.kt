@@ -13,15 +13,12 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -32,11 +29,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.concurrent.futures.await
 import androidx.core.view.WindowCompat
@@ -86,21 +80,23 @@ fun Camera(
             .fillMaxSize(),
     ) {
         val context = LocalContext.current
-        val previewView = PreviewView(context).also {
-            it.scaleType = PreviewView.ScaleType.FILL_CENTER
-            it.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            it.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+        val previewView = remember {
+            PreviewView(context).also {
+                it.scaleType = PreviewView.ScaleType.FILL_CENTER
+                it.layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+                it.implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            }
         }
         val preview = remember { Preview.Builder().build() }
 
-        val imageCapture = ImageCapture.Builder().build()
+        val imageCapture = remember { ImageCapture.Builder().build() }
 
-        val imageAnalyzer = ImageAnalysis.Builder().build()
+        val imageAnalyzer = remember { ImageAnalysis.Builder().build() }
 
-        val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+        val cameraSelector = remember { CameraSelector.DEFAULT_BACK_CAMERA }
 
         LaunchedEffect(cameraSelector) {
             val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -119,15 +115,15 @@ fun Camera(
                 Log.e("DEBUG", "Use case binding failed", exc)
             }
         }
-        val toggleText: String
-        if (checked) {
-            toggleText = "Camera Paused"
-            Log.d("DEBUG", "setSurfaceProvider to null")
-            preview.setSurfaceProvider(null) // This doesn't work, camera is not paused
-        } else {
-            toggleText = "Resume Camera"
-            Log.d("DEBUG", "resume output to camera")
-            preview.setSurfaceProvider(previewView.surfaceProvider)
+
+        LaunchedEffect(checked) {
+            if (checked) {
+                Log.d("DEBUG", "setSurfaceProvider to null")
+                preview.setSurfaceProvider(null) // This doesn't work, camera is not paused
+            } else {
+                Log.d("DEBUG", "resume output to camera")
+                preview.setSurfaceProvider(previewView.surfaceProvider)
+            }
         }
 
         AndroidView(factory = { previewView })
@@ -143,14 +139,6 @@ fun Camera(
                 onCheckedChange = {
                     checked = it
                 }
-            )
-
-            Text(
-                modifier = Modifier
-                    .background(Color.Green)
-                    .padding(4.dp),
-                text = toggleText,
-                textAlign = TextAlign.Center
             )
         }
     }
